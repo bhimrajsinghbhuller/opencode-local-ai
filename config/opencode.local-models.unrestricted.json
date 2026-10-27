@@ -1,0 +1,26 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permissions": [
+    { "action": "*", "resource": "*", "effect": "allow" }
+  ],
+  "providers": {
+    "lmstudio": {
+      "name": "LM Studio (local)",
+      "package": "@opencode/ai/providers/openai-compatible",
+      "settings": {
+        "baseURL": "http://127.0.0.1:1234/v1"
+      },
+      "models": {
+        "qwen/qwen3.5-9b": {
+          "name": "Qwen 3.5 9B (local)"
+        },
+        "google/gemma-3-12b": {
+          "name": "Gemma 3 12B (local)"
+        },
+        "openai/gpt-oss-20b": {
+          "name": "GPT-OSS 20B (local)"
+        }
+      }
+    }
+  }
+}
