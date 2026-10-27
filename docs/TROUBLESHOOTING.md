@@ -1,5 +1,17 @@
 # Troubleshooting
 
+## The bootstrap cannot find OpenCode after installation
+
+The official installer commonly places the executable at `~/.opencode/bin/opencode`. The bootstrap and verification scripts check that path even when a non-interactive shell has not added it to `PATH`.
+
+For interactive terminal use, add the directory to zsh:
+
+```bash
+printf '%s\n' 'export PATH="$HOME/.opencode/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+opencode --version
+```
+
 ## OpenCode cannot reach the model
 
 Symptoms include connection refused, provider initialization failure, or no response.

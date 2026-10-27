@@ -26,6 +26,8 @@ Reproduce and verify an OpenCode setup that uses local language models served by
 8. Run `scripts/verify-local-stack.sh` after setup.
 9. Test inference with a deterministic short response before attempting file operations.
 10. Explain that remote pairing controls the host Mac and does not move local inference into the cloud.
+11. Prefer `scripts/bootstrap-macos.sh` for a fresh macOS installation. It backs up an existing configuration before applying a template.
+12. Do not add application binaries to this repository. Retrieve OpenCode from the official installer so version and architecture remain current.
 
 ## Verification commands
 

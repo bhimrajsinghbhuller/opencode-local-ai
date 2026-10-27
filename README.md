@@ -70,6 +70,24 @@ Model availability, quantization, memory use, and speed vary. A model fitting on
 
 This guide does not reinstall LM Studio.
 
+## Automated macOS bootstrap
+
+After cloning this repository, the default bootstrap installs OpenCode from its official source, starts the LM Studio server, backs up any existing OpenCode configuration, applies the safer local-model policy, restarts OpenCode, and verifies the result:
+
+```bash
+git clone https://github.com/bhimrajsinghbhuller/opencode-local-ai.git
+cd opencode-local-ai
+./scripts/bootstrap-macos.sh --desktop
+```
+
+Complete permission bypass must be requested explicitly:
+
+```bash
+./scripts/bootstrap-macos.sh --unrestricted --desktop
+```
+
+The repository intentionally does not contain a copy of the OpenCode application or executable. Bundled binaries quickly become outdated, increase repository size, are architecture-specific, and make supply-chain verification harder. The bootstrap retrieves the current release from OpenCode's official installer. The configuration, verification logic, bug fixes, and instructions are version-controlled here.
+
 ## Step 1: Start the LM Studio local API server
 
 In LM Studio, open **Developer** and start the local server. The default address is:
