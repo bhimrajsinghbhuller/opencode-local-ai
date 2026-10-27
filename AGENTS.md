@@ -30,6 +30,7 @@ Reproduce and verify an OpenCode setup that uses local language models served by
 12. Do not add application binaries to this repository. Retrieve OpenCode from the official installer so version and architecture remain current.
 13. When LM Studio is missing, use the Homebrew cask or official download. Launch it once before expecting the bundled `lms` CLI to work.
 14. Do not download 26 GB of models without warning the user about storage and possible quantization prompts.
+15. Run `scripts/check-repository.sh` before committing documentation or configuration changes.
 
 ## Verification commands
 

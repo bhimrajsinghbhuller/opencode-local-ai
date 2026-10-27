@@ -2,7 +2,29 @@
 
 Turn a model running locally in LM Studio into a practical coding agent that can read files, edit projects, execute shell commands, run Python, use GitHub, and work through multi-step tasks.
 
-This guide records a working setup on an Apple Silicon MacBook Pro with 24 GB of unified memory. It was tested with OpenCode 2.2.0 and LM Studio's local API server.
+> Last verified October 27, 2026 on an Apple Silicon MacBook Pro with 24 GB of unified memory, OpenCode 2.2.0, LM Studio 0.4.25+1, and Qwen 3.5 9B.
+
+## Start here
+
+- **New Mac:** use [Automated macOS bootstrap](#automated-macos-bootstrap).
+- **LM Studio already installed:** begin with [Step 1](#step-1-start-the-lm-studio-local-api-server).
+- **Need the full LM Studio explanation:** read [Complete LM Studio Setup](docs/LM-STUDIO-SETUP.md).
+- **Want no approval prompts:** first read [Security and Permission Choices](docs/SECURITY.md), then use the unrestricted template.
+- **Want iPhone access:** read [Remote Access and Cloud Operation](docs/REMOTE-AND-CLOUD.md).
+- **Something failed:** go directly to [Troubleshooting](docs/TROUBLESHOOTING.md).
+
+## Contents
+
+1. [The core idea](#the-core-idea)
+2. [Architecture](#architecture)
+3. [Tested local models](#tested-local-models)
+4. [Automated macOS bootstrap](#automated-macos-bootstrap)
+5. [Manual setup](#step-1-start-the-lm-studio-local-api-server)
+6. [Permissions](#step-7-understand-permissions)
+7. [GitHub access](#step-8-give-the-agent-github-access)
+8. [iPhone and remote access](#step-9-use-opencode-from-an-iphone-or-remote-browser)
+9. [Verification](#step-10-run-the-verification-script)
+10. [Agent prompt examples](#how-to-use-it-like-claude-code-or-codex)
 
 ## The core idea
 
@@ -53,6 +75,7 @@ Model availability, quantization, memory use, and speed vary. A model fitting on
 - `config/opencode.local-models.safe.json`: autonomous development with important guardrails
 - `config/opencode.local-models.unrestricted.json`: complete permission bypass
 - `scripts/verify-local-stack.sh`: checks the local stack without modifying projects
+- `scripts/check-repository.sh`: validates this repository's shell, JSON, links, whitespace, and secret hygiene
 - `docs/ARCHITECTURE.md`: how the components communicate
 - `docs/LM-STUDIO-SETUP.md`: complete LM Studio installation, model downloads, loading, memory planning, server setup, and API tests
 - `docs/REMOTE-AND-CLOUD.md`: iPhone access, remote operation, and true cloud deployment
@@ -63,17 +86,15 @@ Model availability, quantization, memory use, and speed vary. A model fitting on
 
 ## Prerequisites
 
-- An Apple Silicon Mac
-- LM Studio installed
-- At least one tool-capable local language model downloaded
+- An Apple Silicon Mac for the tested automated path
 - Internet access for downloading OpenCode and interacting with GitHub
-- Homebrew is useful but not required
+- Homebrew for fully automated desktop application installation
 
-The manual flow supports an existing LM Studio installation. The automated bootstrap can also install LM Studio for a start-from-zero setup.
+The manual flow assumes LM Studio and at least one model are already installed. The complete bootstrap can install LM Studio and download the models from a new Mac.
 
 ## Automated macOS bootstrap
 
-After cloning this repository, the default bootstrap installs OpenCode from its official source, starts the LM Studio server, backs up any existing OpenCode configuration, applies the safer local-model policy, restarts OpenCode, and verifies the result:
+After cloning this repository, the default bootstrap installs OpenCode from its official source, starts the LM Studio server, backs up any existing OpenCode configuration, replaces the active configuration with the safer local-model template, restarts OpenCode, and verifies the result:
 
 ```bash
 git clone https://github.com/bhimrajsinghbhuller/opencode-local-ai.git
@@ -101,6 +122,8 @@ Complete permission bypass must be requested explicitly:
 ```
 
 The repository intentionally does not contain a copy of the OpenCode application or executable. Bundled binaries quickly become outdated, increase repository size, are architecture-specific, and make supply-chain verification harder. The bootstrap retrieves the current release from OpenCode's official installer. The configuration, verification logic, bug fixes, and instructions are version-controlled here.
+
+The bootstrap always saves a timestamped backup before replacing an existing `~/.config/opencode/opencode.json`. If the existing file contains other providers or custom settings, use the manual merge process instead of the bootstrap.
 
 ## Step 1: Start the LM Studio local API server
 
@@ -192,6 +215,7 @@ The essential provider configuration is:
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
+  "model": "lmstudio/qwen/qwen3.5-9b",
   "providers": {
     "lmstudio": {
       "name": "LM Studio (local)",
@@ -216,6 +240,8 @@ The essential provider configuration is:
 ```
 
 Why this matters: `baseURL` is the address of the bridge. The model IDs tell OpenCode what can be selected on the other side of that bridge. No paid API key is required for a local LM Studio endpoint.
+
+OpenCode can discover LM Studio at its default address automatically. This repository keeps an explicit provider and model list so the setup is reproducible, readable, and easy to troubleshoot.
 
 Validate the configuration:
 

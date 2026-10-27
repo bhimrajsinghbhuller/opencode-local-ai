@@ -1,5 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "model": "lmstudio/qwen/qwen3.5-9b",
   "permissions": [
     { "action": "*", "resource": "*", "effect": "allow" }
   ],

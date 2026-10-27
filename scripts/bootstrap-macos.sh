@@ -10,11 +10,11 @@ download_models="false"
 usage() {
   printf '%s\n' "Usage: ./scripts/bootstrap-macos.sh [--safe|--unrestricted] [--desktop] [--install-lm-studio] [--download-models]"
   printf '%s\n' ""
-  printf '%s\n' "  --safe          Install the recommended permission policy (default)"
-  printf '%s\n' "  --unrestricted  Install the complete permission-bypass policy"
-  printf '%s\n' "  --desktop       Install OpenCode Desktop with Homebrew"
+  printf '%s\n' "  --safe              Install the recommended permission policy (default)"
+  printf '%s\n' "  --unrestricted      Install the complete permission-bypass policy"
+  printf '%s\n' "  --desktop           Install OpenCode Desktop with Homebrew"
   printf '%s\n' "  --install-lm-studio  Install and launch LM Studio with Homebrew"
-  printf '%s\n' "  --download-models   Download Qwen 3.5 9B, Gemma 3 12B, and GPT-OSS 20B"
+  printf '%s\n' "  --download-models    Download Qwen 3.5 9B, Gemma 3 12B, and GPT-OSS 20B"
 }
 
 for argument in "$@"; do
@@ -51,6 +51,11 @@ if test "$(uname -s)" != "Darwin"; then
   exit 1
 fi
 
+if test "$(uname -m)" != "arm64"; then
+  printf '%s\n' "This guide and bootstrap target Apple Silicon Macs." >&2
+  exit 1
+fi
+
 script_directory="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repository_directory="$(cd "$script_directory/.." && pwd)"
 
@@ -68,6 +73,11 @@ if test "$install_lm_studio" = "true"; then
   brew install --cask lm-studio
   open -a "LM Studio"
   printf '%s\n' "LM Studio has been opened. Complete its first-launch screen if one appears."
+  if ! command -v lms >/dev/null 2>&1 && test -t 0; then
+    printf '%s' "After completing first launch, press Return to continue: "
+    read -r _
+    hash -r
+  fi
 fi
 
 if ! command -v lms >/dev/null 2>&1; then
@@ -102,11 +112,11 @@ if test "$install_desktop" = "true"; then
 fi
 
 printf '%s\n' "Starting the LM Studio API server..."
-lms server start >/dev/null
+lms server start --port 1234 --bind 127.0.0.1 >/dev/null
 
 download_model_if_missing() {
   local model_id="$1"
-  if lms ls 2>/dev/null | grep -q "$model_id"; then
+  if lms ls 2>/dev/null | grep -Fq "$model_id"; then
     printf 'Already downloaded: %s\n' "$model_id"
   else
     printf 'Downloading %s...\n' "$model_id"
@@ -121,9 +131,13 @@ if test "$download_models" = "true"; then
   download_model_if_missing "openai/gpt-oss-20b"
 fi
 
-if lms ls 2>/dev/null | grep -q 'qwen/qwen3.5-9b'; then
-  printf '%s\n' "Loading qwen/qwen3.5-9b..."
-  lms load qwen/qwen3.5-9b >/dev/null
+if lms ls 2>/dev/null | grep -Fq 'qwen/qwen3.5-9b'; then
+  if lms ps 2>/dev/null | awk 'NR > 1 { print $1 }' | grep -Fxq 'qwen/qwen3.5-9b'; then
+    printf '%s\n' "Qwen 3.5 9B is already loaded."
+  else
+    printf '%s\n' "Loading qwen/qwen3.5-9b..."
+    lms load qwen/qwen3.5-9b --gpu max --context-length 32768 >/dev/null
+  fi
 else
   printf '%s\n' "Qwen 3.5 9B is not downloaded. The provider will still be configured."
 fi
@@ -136,6 +150,7 @@ if test -f "$config_path"; then
   backup_path="$config_path.backup.$(date +%Y%m%d-%H%M%S)"
   cp "$config_path" "$backup_path"
   printf 'Existing OpenCode config backed up to %s\n' "$backup_path"
+  printf '%s\n' "The selected template will replace the active config. Restore the backup to recover unrelated settings."
 fi
 
 if test "$policy" = "unrestricted"; then

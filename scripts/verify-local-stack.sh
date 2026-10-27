@@ -24,6 +24,12 @@ has_command() {
 
 printf 'OpenCode + Local AI verification\n\n'
 
+if test "$(uname -s)" = "Darwin" && test "$(uname -m)" = "arm64"; then
+  pass "Platform is Apple Silicon macOS"
+else
+  warn "This guide was tested on Apple Silicon macOS"
+fi
+
 if has_command lms; then
   pass "LM Studio CLI is installed"
 else
@@ -58,6 +64,18 @@ if has_command lms && lms server status >/dev/null 2>&1; then
   pass "LM Studio server is running"
 else
   fail "LM Studio server is not reporting healthy status"
+fi
+
+if has_command lms && lms ls 2>/dev/null | grep -Fq 'qwen/qwen3.5-9b'; then
+  pass "Qwen 3.5 9B is downloaded"
+else
+  warn "Qwen 3.5 9B is not downloaded under the expected model ID"
+fi
+
+if has_command lms && lms ps 2>/dev/null | awk 'NR > 1 { print $1 }' | grep -Fxq 'qwen/qwen3.5-9b'; then
+  pass "Qwen 3.5 9B is loaded"
+else
+  warn "Qwen 3.5 9B is not currently loaded"
 fi
 
 models_json="$(mktemp -t opencode-local-models.XXXXXX)"
