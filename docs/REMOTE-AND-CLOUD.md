@@ -10,7 +10,9 @@ opencode service start
 opencode pair --remote
 ```
 
-OpenCode prints a one-time URL and QR code. The URL expires after five minutes and works once. Open it on the trusted iPhone or remote computer, not on the host Mac. A paired browser session normally remains signed in until its session expires or the server password changes.
+OpenCode prints a one-time URL and QR code. The URL expires after five minutes and works once. Open it on the trusted iPhone or remote computer, not on the host Mac. A paired browser session lasts 30 days, and changing the server password signs out every session.
+
+![Where the thinking happens: local, remote control, and cloud model compared. Remote control moves the screen, not the model.](images/where-it-runs.svg)
 
 Requirements:
 
@@ -63,4 +65,4 @@ opencode service set remote false
 opencode service start
 ```
 
-Change the server password to invalidate paired sessions if a device or link may have been exposed.
+Change the server password to invalidate paired sessions if a device or link may have been exposed. OpenCode's `opencode service set` command accepts a `password` option. Check the official [web and remote access reference](https://dev.opencode.ai/v2/docs/cli/web) for the exact syntax of your version.

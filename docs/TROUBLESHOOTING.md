@@ -12,6 +12,42 @@ source ~/.zshrc
 opencode --version
 ```
 
+## `lms: command not found`
+
+LM Studio places its CLI at `~/.lmstudio/bin/lms` the first time the app has been launched. The repository scripts look there automatically. For your own shell, run LM Studio once, then:
+
+```bash
+~/.lmstudio/bin/lms bootstrap
+```
+
+Open a new Terminal window and check `lms --help`.
+
+## Port 1234 is already in use
+
+Another program, or a second copy of the LM Studio server, may be holding the port. See what is listening:
+
+```bash
+lsof -nP -iTCP:1234 -sTCP:LISTEN
+```
+
+Stop that program, or deliberately start LM Studio on another port and change `baseURL` in the OpenCode config to match.
+
+## OpenCode says the model is not found
+
+The model ID in the OpenCode config must match what LM Studio serves, character for character. Compare the two lists:
+
+```bash
+curl -sS http://127.0.0.1:1234/v1/models | jq -r '.data[].id'
+lms ls
+opencode models | grep lmstudio
+```
+
+If a download produced a different key, change the key under `models` in `~/.config/opencode/opencode.json` and the `model` value to match, then run `opencode service restart`.
+
+## The bootstrap says the existing config is not plain JSON
+
+`--merge` uses `jq`, which cannot read comments. The config was left untouched. Remove the comments and rerun, or rerun without `--merge` to replace the file. Your original is always saved as `opencode.json.backup.<timestamp>`.
+
 ## OpenCode cannot reach the model
 
 Symptoms include connection refused, provider initialization failure, or no response.

@@ -4,6 +4,30 @@ set -u
 
 failures=0
 opencode_cmd=""
+run_inference="false"
+
+usage() {
+  printf '%s\n' "Usage: ./scripts/verify-local-stack.sh [--inference]"
+  printf '%s\n' ""
+  printf '%s\n' "  --inference  Also send a live test prompt to LM Studio and through OpenCode"
+}
+
+for argument in "$@"; do
+  case "$argument" in
+    --inference)
+      run_inference="true"
+      ;;
+    --help|-h)
+      usage
+      exit 0
+      ;;
+    *)
+      printf 'Unknown option: %s\n' "$argument" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+done
 
 pass() {
   printf 'PASS  %s\n' "$1"
@@ -21,6 +45,10 @@ fail() {
 has_command() {
   command -v "$1" >/dev/null 2>&1
 }
+
+if ! has_command lms && test -x "$HOME/.lmstudio/bin/lms"; then
+  PATH="$HOME/.lmstudio/bin:$PATH"
+fi
 
 printf 'OpenCode + Local AI verification\n\n'
 
@@ -72,7 +100,7 @@ else
   warn "Qwen 3.5 9B is not downloaded under the expected model ID"
 fi
 
-if has_command lms && lms ps 2>/dev/null | awk 'NR > 1 { print $1 }' | grep -Fxq 'qwen/qwen3.5-9b'; then
+if has_command lms && lms ps 2>/dev/null | grep -Eq '(^|[[:space:]])qwen/qwen3\.5-9b(:[0-9]+)?([[:space:]]|$)'; then
   pass "Qwen 3.5 9B is loaded"
 else
   warn "Qwen 3.5 9B is not currently loaded"
@@ -122,6 +150,29 @@ if has_command gh; then
   fi
 else
   warn "GitHub CLI is not installed"
+fi
+
+if test "$run_inference" = "true"; then
+  printf '\nLive inference tests (these use the loaded model and can take a minute)\n'
+
+  direct_response="$(curl -sS --max-time 180 http://127.0.0.1:1234/v1/chat/completions \
+    -H 'Content-Type: application/json' \
+    -d '{"model":"qwen/qwen3.5-9b","messages":[{"role":"user","content":"Reply with exactly LM_STUDIO_OK"}],"temperature":0}' 2>/dev/null)"
+  if printf '%s' "$direct_response" | grep -Fq 'LM_STUDIO_OK'; then
+    pass "LM Studio answered the direct test prompt"
+  else
+    fail "LM Studio did not return LM_STUDIO_OK. Is qwen/qwen3.5-9b loaded?"
+  fi
+
+  if test -n "$opencode_cmd"; then
+    opencode_response="$(perl -e 'alarm shift; exec @ARGV' 240 "$opencode_cmd" run \
+      --model lmstudio/qwen/qwen3.5-9b --auto "Reply with exactly: LOCAL_QWEN_OK" 2>&1)"
+    if printf '%s\n' "$opencode_response" | grep -F 'LOCAL_QWEN_OK' | grep -Fvq 'Reply with'; then
+      pass "OpenCode returned LOCAL_QWEN_OK through the local model"
+    else
+      fail "OpenCode did not return LOCAL_QWEN_OK"
+    fi
+  fi
 fi
 
 printf '\n'

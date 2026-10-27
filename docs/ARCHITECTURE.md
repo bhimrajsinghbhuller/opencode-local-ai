@@ -35,6 +35,8 @@ Git records local history. GitHub CLI uses the account stored in the system cred
 
 This loop is the practical difference between a text chatbot and a coding agent.
 
+![How one request becomes work: goal, ask the model, model decides, permission check, tool runs, result goes back, repeat](images/agent-loop.svg)
+
 ## Trust boundaries
 
 ```text

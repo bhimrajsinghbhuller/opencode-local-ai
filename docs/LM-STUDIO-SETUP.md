@@ -28,6 +28,10 @@ Keep additional free space for downloads, temporary files, context caches, proje
 
 Do not assume all three models can remain loaded simultaneously on a 24 GB machine. Keep one primary language model loaded for the most predictable performance.
 
+### Smaller Macs
+
+This has not been tested on a Mac with less than 24 GB. A reasonable approach is to download only Qwen 3.5 9B (`lms get qwen/qwen3.5-9b`) instead of using `--download-models`, run `lms load --estimate-only` first, and begin with a context length of 16384 or lower. The bootstrap loads Qwen with a 32768 context, so on a smaller Mac run `lms unload --all` afterwards and reload it with the smaller context shown below.
+
 ## Option A: Install with Homebrew
 
 ```bash
@@ -55,6 +59,14 @@ lms runtime ls
 ```
 
 The CLI ships with LM Studio. If `lms` is not found, reopen LM Studio, complete its first launch, and open a new Terminal window.
+
+If it is still not found, LM Studio's own documentation says to add it to your `PATH` with the bootstrap command that ships next to it, then open a new Terminal window:
+
+```bash
+~/.lmstudio/bin/lms bootstrap
+```
+
+The repository scripts also look in `~/.lmstudio/bin` themselves, so they work even before your shell finds `lms`.
 
 Official reference: [LM Studio CLI](https://lmstudio.ai/docs/cli)
 
@@ -84,6 +96,13 @@ Search and download the three language models:
 lms get qwen/qwen3.5-9b
 lms get google/gemma-3-12b
 lms get openai/gpt-oss-20b
+```
+
+The optional embedding model is much smaller. Its download name differs from the key that LM Studio lists afterwards:
+
+```bash
+lms get nomic-ai/nomic-embed-text-v1.5
+lms ls   # lists it as text-embedding-nomic-embed-text-v1.5
 ```
 
 If more than one format or quantization is available, LM Studio asks which one to download. To deliberately inspect all download options:
@@ -198,6 +217,8 @@ Expected response:
 ```text
 LM_STUDIO_OK
 ```
+
+`./scripts/verify-local-stack.sh --inference` sends this same request and reports PASS or FAIL.
 
 ## Verify tool-call capability
 

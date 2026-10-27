@@ -1,8 +1,10 @@
+![OpenCode + Local AI: a local model, LM Studio, and OpenCode running on your Mac](docs/images/hero.svg)
+
 # OpenCode + Local AI
 
 Turn a model running locally in LM Studio into a practical coding agent that can read files, edit projects, execute shell commands, run Python, use GitHub, and work through multi-step tasks.
 
-> Last verified October 27, 2026 on an Apple Silicon MacBook Pro with 24 GB of unified memory, OpenCode 2.2.0, LM Studio 0.4.25+1, and Qwen 3.5 9B.
+> Last verified October 27, 2026 on an Apple Silicon MacBook Pro with 24 GB of unified memory, OpenCode 2.2.0, LM Studio 0.4.25+1, and Qwen 3.5 9B. Newer releases should behave the same, but only these versions have been verified. If a command or flag differs, see [Troubleshooting](docs/TROUBLESHOOTING.md).
 
 ## Start here
 
@@ -12,6 +14,9 @@ Turn a model running locally in LM Studio into a practical coding agent that can
 - **Want no approval prompts:** first read [Security and Permission Choices](docs/SECURITY.md), then use the unrestricted template.
 - **Want iPhone access:** read [Remote Access and Cloud Operation](docs/REMOTE-AND-CLOUD.md).
 - **Something failed:** go directly to [Troubleshooting](docs/TROUBLESHOOTING.md).
+- **You are an AI agent taking over this repository:** read [AGENTS.md](AGENTS.md) first.
+
+![Setup roadmap: install LM Studio, download models, start the server, install OpenCode, apply the config, prove it works](docs/images/setup-roadmap.svg)
 
 ## Contents
 
@@ -37,6 +42,8 @@ A language model by itself is like a capable mind in a room with no hands. It ca
 - **Git is the safety journal.** It records changes so work can be reviewed, compared, and restored.
 - **Remote pairing is the remote control.** An iPhone or another computer can operate the OpenCode server that is still running on the Mac.
 
+![The core idea: the model is the mind, LM Studio is the voice, OpenCode is the hands, permissions are door locks, Git is a safety journal, pairing is a remote control](docs/images/analogy.svg)
+
 LM Studio alone is mainly a chat and model-serving application. OpenCode turns the same model into an agent by repeatedly letting it inspect results, choose a tool, act, read the result, and continue until the task is complete.
 
 ## Architecture
@@ -57,6 +64,10 @@ flowchart LR
 
 Prompts and model inference stay local when the LM Studio provider is selected. GitHub operations and remote pairing use the internet because those features contact external services.
 
+Whatever the task, OpenCode repeats the same loop. This loop is the practical difference between a chatbot and a coding agent:
+
+![How one request becomes work: goal, ask the model, model decides, permission check, tool runs, result goes back, repeat](docs/images/agent-loop.svg)
+
 ## Tested local models
 
 These were downloaded on the reference Mac:
@@ -68,14 +79,18 @@ These were downloaded on the reference Mac:
 | `openai/gpt-oss-20b` | 20B | 12.10 GB | Larger local model when memory permits |
 | `text-embedding-nomic-embed-text-v1.5` | Embedding model | 84 MB | Retrieval and semantic search, not agent chat |
 
+The embedding model is optional and is not used for agent chat. The bootstrap fetches it with `lms get nomic-ai/nomic-embed-text-v1.5`, and LM Studio then lists it as `text-embedding-nomic-embed-text-v1.5`.
+
 Model availability, quantization, memory use, and speed vary. A model fitting on disk does not guarantee that every model can remain loaded comfortably at a large context size.
 
 ## Repository contents
 
 - `config/opencode.local-models.safe.json`: autonomous development with important guardrails
 - `config/opencode.local-models.unrestricted.json`: complete permission bypass
-- `scripts/verify-local-stack.sh`: checks the local stack without modifying projects
-- `scripts/check-repository.sh`: validates this repository's shell, JSON, links, whitespace, and secret hygiene
+- `scripts/bootstrap-macos.sh`: installs and configures the whole stack, and is safe to rerun
+- `scripts/verify-local-stack.sh`: checks the local stack without modifying projects, and with `--inference` also proves the model answers
+- `scripts/check-repository.sh`: validates this repository's shell, JSON, SVG, links, whitespace, and secret hygiene
+- `docs/images/`: the SVG illustrations used in these documents
 - `docs/ARCHITECTURE.md`: how the components communicate
 - `docs/LM-STUDIO-SETUP.md`: complete LM Studio installation, model downloads, loading, memory planning, server setup, and API tests
 - `docs/REMOTE-AND-CLOUD.md`: iPhone access, remote operation, and true cloud deployment
@@ -87,8 +102,12 @@ Model availability, quantization, memory use, and speed vary. A model fitting on
 ## Prerequisites
 
 - An Apple Silicon Mac for the tested automated path
+- Roughly 26 GB of free disk space for the three language models, plus working room. The bootstrap reports free space before it downloads and warns below 35 GB.
+- 24 GB of unified memory is what the reference Mac had. A smaller Mac can still use Qwen 3.5 9B alone with a smaller context, see [Hardware and storage planning](docs/LM-STUDIO-SETUP.md#hardware-and-storage-planning).
 - Internet access for downloading OpenCode and interacting with GitHub
-- Homebrew for fully automated desktop application installation
+- Git, which macOS offers to install with the Command Line Tools the first time you run it
+- [Homebrew](https://brew.sh) for fully automated desktop application installation
+- `jq`, installed with `brew install jq`, for readable model lists in the verification script and for `--merge`
 
 The manual flow assumes LM Studio and at least one model are already installed. The complete bootstrap can install LM Studio and download the models from a new Mac.
 
@@ -113,7 +132,7 @@ cd opencode-local-ai
   --desktop
 ```
 
-If LM Studio shows a first-launch screen and the script cannot yet find `lms`, finish the first launch and rerun the same command. Existing model downloads are detected and skipped.
+If LM Studio shows a first-launch screen and the script cannot yet find `lms`, finish the first launch and rerun the same command. The script also looks in `~/.lmstudio/bin`, where LM Studio places the CLI. If `lms` is still missing, run `~/.lmstudio/bin/lms bootstrap`, open a new Terminal, and rerun. Existing model downloads are detected and skipped, and a model that is already loaded is not loaded twice.
 
 Complete permission bypass must be requested explicitly:
 
@@ -121,9 +140,21 @@ Complete permission bypass must be requested explicitly:
 ./scripts/bootstrap-macos.sh --unrestricted --desktop
 ```
 
+When the script finishes, prove that the model really answers:
+
+```bash
+./scripts/verify-local-stack.sh --inference
+```
+
 The repository intentionally does not contain a copy of the OpenCode application or executable. Bundled binaries quickly become outdated, increase repository size, are architecture-specific, and make supply-chain verification harder. The bootstrap retrieves the current release from OpenCode's official installer. The configuration, verification logic, bug fixes, and instructions are version-controlled here.
 
-The bootstrap always saves a timestamped backup before replacing an existing `~/.config/opencode/opencode.json`. If the existing file contains other providers or custom settings, use the manual merge process instead of the bootstrap.
+The bootstrap always saves a timestamped backup before touching an existing `~/.config/opencode/opencode.json`. By default it replaces that file with the template. If the existing file contains other providers or custom settings, add `--merge` to keep them:
+
+```bash
+./scripts/bootstrap-macos.sh --merge --desktop
+```
+
+The merge keeps unrelated providers and settings, adds or updates the `lmstudio` provider, and takes `model` and `permissions` from the selected template. It needs `jq` and refuses to touch a config that is not plain JSON, for example one containing comments.
 
 ## Step 1: Start the LM Studio local API server
 
@@ -208,7 +239,16 @@ mkdir -p ~/.config/opencode
 cp config/opencode.local-models.safe.json ~/.config/opencode/opencode.json
 ```
 
-If an OpenCode configuration already exists, merge the `providers` and `permissions` sections instead of overwriting the file.
+If an OpenCode configuration already exists, merge instead of overwriting it. The bootstrap does this with `--merge`. To do it by hand from the repository root, keep a backup and let `jq` combine the files. The template wins for `model` and `permissions`, and other providers and settings are kept:
+
+```bash
+config=~/.config/opencode/opencode.json
+cp "$config" "$config.backup"
+jq -s '.[0] * .[1]' "$config" config/opencode.local-models.safe.json > "$config.merged" &&
+  mv "$config.merged" "$config"
+```
+
+Model IDs must match the keys that `lms ls` prints and the ids that `/v1/models` returns. If a download produced a different key, edit the template instead of guessing.
 
 The essential provider configuration is:
 
@@ -288,11 +328,15 @@ Repeat the same prompt in OpenCode Desktop. A successful response proves this pa
 OpenCode -> localhost:1234 -> LM Studio -> local Qwen -> OpenCode
 ```
 
+`./scripts/verify-local-stack.sh --inference` runs this same test, plus a direct request to LM Studio, and reports PASS or FAIL.
+
 ## Step 7: Understand permissions
 
 OpenCode permission rules are ordered. The last matching rule wins.
 
 The recommended policy allows ordinary file operations, shell commands, Python, builds, and tests. It still asks before external-folder access and Git pushes, while blocking `sudo` and `rm -rf`.
+
+![Permissions are the door locks: allow, ask, and deny lanes of the safe template, compared with the unrestricted template](docs/images/permissions.svg)
 
 ```json
 "permissions": [
@@ -370,9 +414,11 @@ opencode service start
 opencode pair --remote
 ```
 
-Open the one-time link on the iPhone. The link works once and expires after five minutes. In Safari, use **Share > Add to Home Screen** for app-like access.
+Open the one-time link on the iPhone. The link works once and expires after five minutes. Once opened, that browser session lasts 30 days unless the server password changes. In Safari, use **Share > Add to Home Screen** for app-like access.
 
 The paired browser controls the OpenCode server on the Mac. The Mac must remain awake, connected to the internet, and running OpenCode and LM Studio with the model loaded.
+
+![Where the thinking happens: local, remote control, and cloud model compared. Remote control moves the screen, not the model.](docs/images/where-it-runs.svg)
 
 If the first remote pairing attempt remains at `Setting up remote access`, see `docs/TROUBLESHOOTING.md`.
 
@@ -394,7 +440,7 @@ The script checks:
 - Visibility of the LM Studio models
 - Git and optional GitHub authentication
 
-It does not edit projects or change permissions.
+It does not edit projects or change permissions. Add `--inference` to also send a short test prompt directly to LM Studio and through OpenCode. That mode uses the loaded model, can take a minute, and may add a short session to OpenCode's history.
 
 ## How to use it like Claude Code or Codex
 

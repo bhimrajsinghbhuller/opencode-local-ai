@@ -37,6 +37,18 @@ else
   fail "jq is required to validate JSON"
 fi
 
+if command -v xmllint >/dev/null 2>&1; then
+  for image_path in docs/images/*.svg; do
+    if xmllint --noout "$image_path"; then
+      pass "SVG syntax: $image_path"
+    else
+      fail "SVG syntax: $image_path"
+    fi
+  done
+else
+  fail "xmllint is required to validate SVG images"
+fi
+
 if git diff --check; then
   pass "No whitespace errors"
 else
@@ -50,7 +62,7 @@ else
 fi
 
 em_dash="$(printf '\342\200\224')"
-if git grep -n "$em_dash" -- '*.md' '*.sh' '*.yml' '*.yaml'; then
+if git grep -n "$em_dash" -- '*.md' '*.sh' '*.yml' '*.yaml' '*.svg'; then
   fail "Em dash found in repository text"
 else
   pass "No em dashes in repository text"

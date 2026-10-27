@@ -10,6 +10,8 @@ A local model can misunderstand instructions, hallucinate a path, run an overly 
 
 Use `config/opencode.local-models.safe.json` for ordinary work. It provides an autonomous coding loop while preserving checkpoints around external directories and Git pushes. It also blocks two especially risky command patterns.
 
+![Permissions are the door locks: allow, ask, and deny lanes of the safe template, compared with the unrestricted template](images/permissions.svg)
+
 Important limitation: pattern rules are not a complete sandbox. A destructive operation can be expressed in many ways. The best protection is a combination of permissions, Git, backups, a clean working tree, and careful task scope.
 
 ## Complete bypass
@@ -25,6 +27,10 @@ The unrestricted policy is:
 ```
 
 This removes OpenCode approval prompts and configured blocks. It does not bypass Touch ID, macOS administrator authentication, hardware security, or permissions that the macOS account itself does not possess.
+
+## The LM Studio server
+
+The bootstrap starts LM Studio with `--bind 127.0.0.1`, which is also LM Studio's documented default, so only programs on the same Mac can reach it. LM Studio's server has authentication turned off by default. Binding it to `0.0.0.0`, or switching on LM Studio's option to serve on the local network, lets other devices send requests to your model with no password. Keep it on localhost and use OpenCode remote pairing when another device needs access.
 
 ## Safe operating habits
 

@@ -93,3 +93,30 @@ The local Qwen model can now be selected in OpenCode and used as a tool-capable 
 ## Repository expansion
 
 The reusable repository was expanded beyond the original machine's starting point. It now includes installation of LM Studio itself, downloading all three language models, selecting formats and quantizations, estimating memory, loading and unloading models, starting the server securely on localhost, direct API tests, and an automated start-from-zero macOS bootstrap path.
+
+## Audit record, October 27, 2026
+
+A documentation and script audit was done from a Linux sandbox. The macOS stack could not be run there, so macOS behavior was exercised through stand-in `lms`, `opencode`, `brew`, and `curl` commands, never against the real tools.
+
+Confirmed against the official documentation:
+
+- OpenCode install command, Homebrew name, `providers` and `package` config keys, `settings.baseURL`, and the `permissions` rule schema with last-match-wins ordering
+- `lms server start --bind` and its `127.0.0.1` default, `lms load --gpu max`, `--context-length`, `--ttl`, `--estimate-only`, and `lms get` with `--mlx`, `--gguf`, and `--always-show-download-options`
+- Homebrew cask names `lm-studio` and `opencode-desktop`, both Apple Silicon compatible
+- Pairing links work once and expire in five minutes, and a paired session lasts 30 days
+- The embedding model downloads as `nomic-ai/nomic-embed-text-v1.5` and is listed as `text-embedding-nomic-embed-text-v1.5`
+
+Not found on the documentation pages that were checked, although they worked on the reference Mac: `opencode service restart`, `opencode service get remote`, `opencode run --model` and `--auto`, `opencode models`, and `opencode debug config`. They were left as they were.
+
+Changes made because of the audit:
+
+- The scripts now find `lms` in `~/.lmstudio/bin` when it is not on `PATH`.
+- The loaded-model check accepts both the table and the block layouts of `lms ps`, which the official page describes as blocks. The old check required a table and would have loaded a second copy of an already loaded model if the layout differed.
+- Rerunning the bootstrap no longer depends on `lms server start` succeeding when the server is already up. It checks that the API answers instead.
+- `opencode service restart` falls back to `opencode service start` on a first run.
+- Model lookups no longer pipe into `grep -q` under `pipefail`, which can report a false miss when the writer outlives the reader.
+- The embedding model is now part of `--download-models` and is treated as optional.
+- `--merge` keeps other providers and settings, and `verify-local-stack.sh --inference` proves the model answers.
+- The SVG illustrations in `docs/images/` were added and are checked by `check-repository.sh`.
+
+The configuration templates were deliberately not changed.
