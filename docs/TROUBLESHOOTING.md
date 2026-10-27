@@ -140,6 +140,24 @@ git status
 
 Confirm the active GitHub account has access to the repository. A successful OpenCode model connection does not automatically authenticate GitHub.
 
+### Git pushes with the wrong saved GitHub account
+
+On a Mac with multiple GitHub CLI accounts, `gh auth status` can show the intended account as active while Git's HTTPS credential helper still supplies another saved account. A push can then fail with a message such as:
+
+```text
+Permission to OWNER/REPOSITORY.git denied to OTHER-ACCOUNT.
+```
+
+Switch the active GitHub CLI account and explicitly refresh Git's credential integration:
+
+```bash
+gh auth switch --hostname github.com --user INTENDED-ACCOUNT
+gh auth setup-git --hostname github.com
+git push origin main
+```
+
+This changes which stored account Git uses without printing or copying the token.
+
 ## Free cloud models return rate-limit errors
 
 Models labeled `Free` can still have usage and capacity limits. Switch back to the local LM Studio model for unmetered local inference, or wait for the cloud capacity limit to reset.

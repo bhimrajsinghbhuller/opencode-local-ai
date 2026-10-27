@@ -84,6 +84,7 @@ The iPhone controls the Mac. Qwen continues to run on the Mac. The Mac, LM Studi
 | User requested no approvals | Guardrails still asked or denied certain actions | Replaced the rules with one global wildcard `allow` |
 | First remote setup appeared stuck | Initial tunnel activation did not finish inside the pairing command | Ran `service set remote true`, started the service, then paired again |
 | Pairing URL expired | Link was older than five minutes or had been opened | Generated a new one-time link and opened it directly on the iPhone |
+| A later Git push used the wrong account | Git's HTTPS credential helper selected a different saved GitHub account | Switched the GitHub CLI account and reran `gh auth setup-git` |
 
 ## Result
 
