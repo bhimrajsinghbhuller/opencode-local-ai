@@ -54,6 +54,7 @@ Model availability, quantization, memory use, and speed vary. A model fitting on
 - `config/opencode.local-models.unrestricted.json`: complete permission bypass
 - `scripts/verify-local-stack.sh`: checks the local stack without modifying projects
 - `docs/ARCHITECTURE.md`: how the components communicate
+- `docs/LM-STUDIO-SETUP.md`: complete LM Studio installation, model downloads, loading, memory planning, server setup, and API tests
 - `docs/REMOTE-AND-CLOUD.md`: iPhone access, remote operation, and true cloud deployment
 - `docs/SECURITY.md`: permission and credential risks
 - `docs/TROUBLESHOOTING.md`: fixes discovered during setup
@@ -68,7 +69,7 @@ Model availability, quantization, memory use, and speed vary. A model fitting on
 - Internet access for downloading OpenCode and interacting with GitHub
 - Homebrew is useful but not required
 
-This guide does not reinstall LM Studio.
+The manual flow supports an existing LM Studio installation. The automated bootstrap can also install LM Studio for a start-from-zero setup.
 
 ## Automated macOS bootstrap
 
@@ -80,6 +81,19 @@ cd opencode-local-ai
 ./scripts/bootstrap-macos.sh --desktop
 ```
 
+For a new Apple Silicon Mac without LM Studio or the models, use the complete setup. The model downloads require roughly 26 GB in the tested variants and may prompt for a format or quantization:
+
+```bash
+git clone https://github.com/bhimrajsinghbhuller/opencode-local-ai.git
+cd opencode-local-ai
+./scripts/bootstrap-macos.sh \
+  --install-lm-studio \
+  --download-models \
+  --desktop
+```
+
+If LM Studio shows a first-launch screen and the script cannot yet find `lms`, finish the first launch and rerun the same command. Existing model downloads are detected and skipped.
+
 Complete permission bypass must be requested explicitly:
 
 ```bash
@@ -89,6 +103,8 @@ Complete permission bypass must be requested explicitly:
 The repository intentionally does not contain a copy of the OpenCode application or executable. Bundled binaries quickly become outdated, increase repository size, are architecture-specific, and make supply-chain verification harder. The bootstrap retrieves the current release from OpenCode's official installer. The configuration, verification logic, bug fixes, and instructions are version-controlled here.
 
 ## Step 1: Start the LM Studio local API server
+
+For installation, model-download, quantization, memory, and runtime details, first read [Complete LM Studio Setup](docs/LM-STUDIO-SETUP.md).
 
 In LM Studio, open **Developer** and start the local server. The default address is:
 

@@ -4,13 +4,17 @@ set -euo pipefail
 
 policy="safe"
 install_desktop="false"
+install_lm_studio="false"
+download_models="false"
 
 usage() {
-  printf '%s\n' "Usage: ./scripts/bootstrap-macos.sh [--safe|--unrestricted] [--desktop]"
+  printf '%s\n' "Usage: ./scripts/bootstrap-macos.sh [--safe|--unrestricted] [--desktop] [--install-lm-studio] [--download-models]"
   printf '%s\n' ""
   printf '%s\n' "  --safe          Install the recommended permission policy (default)"
   printf '%s\n' "  --unrestricted  Install the complete permission-bypass policy"
   printf '%s\n' "  --desktop       Install OpenCode Desktop with Homebrew"
+  printf '%s\n' "  --install-lm-studio  Install and launch LM Studio with Homebrew"
+  printf '%s\n' "  --download-models   Download Qwen 3.5 9B, Gemma 3 12B, and GPT-OSS 20B"
 }
 
 for argument in "$@"; do
@@ -23,6 +27,12 @@ for argument in "$@"; do
       ;;
     --desktop)
       install_desktop="true"
+      ;;
+    --install-lm-studio)
+      install_lm_studio="true"
+      ;;
+    --download-models)
+      download_models="true"
       ;;
     --help|-h)
       usage
@@ -49,8 +59,19 @@ if ! command -v curl >/dev/null 2>&1; then
   exit 1
 fi
 
+if test "$install_lm_studio" = "true"; then
+  if ! command -v brew >/dev/null 2>&1; then
+    printf '%s\n' "Homebrew is required for --install-lm-studio." >&2
+    exit 1
+  fi
+  printf '%s\n' "Installing LM Studio..."
+  brew install --cask lm-studio
+  open -a "LM Studio"
+  printf '%s\n' "LM Studio has been opened. Complete its first-launch screen if one appears."
+fi
+
 if ! command -v lms >/dev/null 2>&1; then
-  printf '%s\n' "LM Studio CLI was not found. Install LM Studio or run its CLI installer first." >&2
+  printf '%s\n' "LM Studio CLI was not found. Launch LM Studio once, open a new Terminal, and rerun this script." >&2
   exit 1
 fi
 
@@ -82,6 +103,23 @@ fi
 
 printf '%s\n' "Starting the LM Studio API server..."
 lms server start >/dev/null
+
+download_model_if_missing() {
+  local model_id="$1"
+  if lms ls 2>/dev/null | grep -q "$model_id"; then
+    printf 'Already downloaded: %s\n' "$model_id"
+  else
+    printf 'Downloading %s...\n' "$model_id"
+    lms get "$model_id"
+  fi
+}
+
+if test "$download_models" = "true"; then
+  printf '%s\n' "Model downloads may require more than 26 GB of disk space."
+  download_model_if_missing "qwen/qwen3.5-9b"
+  download_model_if_missing "google/gemma-3-12b"
+  download_model_if_missing "openai/gpt-oss-20b"
+fi
 
 if lms ls 2>/dev/null | grep -q 'qwen/qwen3.5-9b'; then
   printf '%s\n' "Loading qwen/qwen3.5-9b..."

@@ -89,3 +89,7 @@ The iPhone controls the Mac. Qwen continues to run on the Mac. The Mac, LM Studi
 ## Result
 
 The local Qwen model can now be selected in OpenCode and used as a tool-capable coding agent. It can operate files, run commands, use GitHub credentials available to the Mac, and be controlled remotely. Inference remains local whenever the LM Studio model is selected.
+
+## Repository expansion
+
+The reusable repository was expanded beyond the original machine's starting point. It now includes installation of LM Studio itself, downloading all three language models, selecting formats and quantizations, estimating memory, loading and unloading models, starting the server securely on localhost, direct API tests, and an automated start-from-zero macOS bootstrap path.

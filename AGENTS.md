@@ -16,7 +16,7 @@ Reproduce and verify an OpenCode setup that uses local language models served by
 
 ## Required behavior
 
-1. Read `README.md`, `docs/SECURITY.md`, and `docs/TROUBLESHOOTING.md` before changing configuration.
+1. Read `README.md`, `docs/LM-STUDIO-SETUP.md`, `docs/SECURITY.md`, and `docs/TROUBLESHOOTING.md` before changing configuration.
 2. Never print, copy, or commit API keys, GitHub tokens, server passwords, or remote pairing URLs.
 3. Inspect an existing `~/.config/opencode/opencode.json` before replacing it.
 4. Preserve unrelated providers and settings when merging configuration.
@@ -28,6 +28,8 @@ Reproduce and verify an OpenCode setup that uses local language models served by
 10. Explain that remote pairing controls the host Mac and does not move local inference into the cloud.
 11. Prefer `scripts/bootstrap-macos.sh` for a fresh macOS installation. It backs up an existing configuration before applying a template.
 12. Do not add application binaries to this repository. Retrieve OpenCode from the official installer so version and architecture remain current.
+13. When LM Studio is missing, use the Homebrew cask or official download. Launch it once before expecting the bundled `lms` CLI to work.
+14. Do not download 26 GB of models without warning the user about storage and possible quantization prompts.
 
 ## Verification commands
 
