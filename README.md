@@ -1,4 +1,4 @@
-# OpenCode + Local AI Framework by Bhimraj Bhuller 
+# OpenCode + Local AI Framework by bbhuller 
 
 Turn a model running locally in LM Studio into a practical coding agent that can read files, edit projects, execute shell commands, run Python, use GitHub, and work through multi-step tasks.
 
